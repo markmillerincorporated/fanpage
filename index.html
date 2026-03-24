@@ -1,0 +1,1649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MILLER, M. // CLASSIFIED</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #050608;
+    --dark: #0a0c10;
+    --panel: #0e1118;
+    --border: #1e2530;
+    --accent: #c8a84b;
+    --accent2: #4b7fc8;
+    --red: #c84b4b;
+    --green: #4bc87a;
+    --text: #b8bec8;
+    --text-dim: #5a6070;
+    --white: #e8eaf0;
+    --mono: 'Share Tech Mono', monospace;
+    --display: 'Bebas Neue', sans-serif;
+    --serif: 'Crimson Pro', serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--black);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+    cursor: crosshair;
+  }
+
+  /* SCANLINE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* NOISE GRAIN */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 9998;
+    animation: grain 8s steps(10) infinite;
+  }
+
+  @keyframes grain {
+    0%, 100% { transform: translate(0, 0); }
+    10% { transform: translate(-5%, -10%); }
+    30% { transform: translate(3%, -15%); }
+    50% { transform: translate(12%, 9%); }
+    70% { transform: translate(-9%, 4%); }
+    90% { transform: translate(-1%, -5%); }
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    height: 60px;
+    background: rgba(5, 6, 8, 0.95);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+  }
+
+  .nav-logo {
+    font-family: var(--display);
+    font-size: 22px;
+    letter-spacing: 6px;
+    color: var(--accent);
+    text-shadow: 0 0 20px rgba(200,168,75,0.4);
+  }
+
+  .nav-logo span {
+    color: var(--text-dim);
+    font-size: 11px;
+    font-family: var(--mono);
+    letter-spacing: 3px;
+    display: block;
+    margin-top: -4px;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 0;
+    list-style: none;
+  }
+
+  .nav-links li a {
+    display: block;
+    padding: 8px 18px;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .nav-links li a:hover,
+  .nav-links li a.active {
+    color: var(--accent);
+    border-color: var(--border);
+    background: rgba(200,168,75,0.05);
+  }
+
+  .nav-links li a.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0; right: 0;
+    height: 1px;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  /* STATUS BAR */
+  .status-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    height: 28px;
+    background: rgba(5,6,8,0.98);
+    border-top: 1px solid var(--border);
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+  }
+
+  .status-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    margin-right: 8px;
+    box-shadow: 0 0 6px var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* PAGES */
+  .page { display: none; padding: 80px 40px 50px; min-height: 100vh; }
+  .page.active { display: block; animation: fadeIn 0.4s ease; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* SECTION HEADERS */
+  .section-header {
+    margin-bottom: 50px;
+    position: relative;
+    padding-bottom: 20px;
+  }
+
+  .section-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 60px; height: 1px;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+  }
+
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 5px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .section-title {
+    font-family: var(--display);
+    font-size: clamp(48px, 8vw, 90px);
+    color: var(--white);
+    letter-spacing: 8px;
+    line-height: 0.9;
+    text-shadow: 0 0 40px rgba(232,234,240,0.1);
+  }
+
+  .section-sub {
+    margin-top: 16px;
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--text-dim);
+    font-size: 15px;
+    letter-spacing: 1px;
+  }
+
+  /* REDACTED */
+  .redacted {
+    background: var(--white);
+    color: var(--white);
+    padding: 0 4px;
+    user-select: none;
+    filter: blur(0.5px);
+  }
+
+  /* ========================
+     HOME PAGE
+  ======================== */
+  .home-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto;
+    gap: 1px;
+    background: var(--border);
+    margin-bottom: 1px;
+  }
+
+  .home-hero {
+    grid-column: 1 / 3;
+    grid-row: 1;
+    background: var(--panel);
+    padding: 60px 50px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .home-hero::before {
+    content: 'TOP SECRET';
+    position: absolute;
+    top: 20px; right: -30px;
+    font-family: var(--display);
+    font-size: 80px;
+    color: rgba(200,75,75,0.06);
+    letter-spacing: 10px;
+    transform: rotate(-15deg);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .dossier-stamp {
+    position: absolute;
+    top: 30px; right: 50px;
+    border: 3px solid rgba(200,75,75,0.5);
+    padding: 8px 16px;
+    font-family: var(--display);
+    font-size: 22px;
+    letter-spacing: 5px;
+    color: rgba(200,75,75,0.5);
+    transform: rotate(5deg);
+    text-shadow: 0 0 10px rgba(200,75,75,0.3);
+  }
+
+  .classification-tag {
+    display: inline-block;
+    background: rgba(200,168,75,0.1);
+    border: 1px solid var(--accent);
+    padding: 4px 12px;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--accent);
+    margin-bottom: 24px;
+  }
+
+  .hero-name {
+    font-family: var(--display);
+    font-size: clamp(70px, 12vw, 130px);
+    color: var(--white);
+    letter-spacing: 15px;
+    line-height: 0.85;
+    margin-bottom: 6px;
+    text-shadow: 0 0 60px rgba(232,234,240,0.08);
+  }
+
+  .hero-title {
+    font-family: var(--serif);
+    font-size: 20px;
+    font-style: italic;
+    color: var(--accent);
+    letter-spacing: 3px;
+    margin-bottom: 30px;
+  }
+
+  .hero-bio {
+    font-family: var(--serif);
+    font-size: 16px;
+    line-height: 1.9;
+    color: var(--text);
+    max-width: 520px;
+    border-left: 2px solid var(--border);
+    padding-left: 20px;
+  }
+
+  .stats-panel {
+    background: var(--panel);
+    padding: 40px 30px;
+    border-left: none;
+  }
+
+  .stat-item {
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .stat-item:last-child { border-bottom: none; }
+
+  .stat-label {
+    font-size: 9px;
+    letter-spacing: 4px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .stat-value {
+    font-family: var(--display);
+    font-size: 28px;
+    color: var(--accent);
+    letter-spacing: 4px;
+  }
+
+  .stat-sub {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  /* PHOTO GRID */
+  .photo-section {
+    margin-top: 1px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+  }
+
+  .photo-slot {
+    background: var(--panel);
+    aspect-ratio: 1;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+
+  .photo-slot:hover { background: #111420; }
+
+  .photo-slot .photo-placeholder {
+    width: 60px; height: 60px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    font-size: 24px;
+    transition: all 0.3s;
+  }
+
+  .photo-slot:hover .photo-placeholder {
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 20px rgba(200,168,75,0.2);
+  }
+
+  .photo-label {
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-align: center;
+  }
+
+  .photo-slot:hover .photo-label { color: var(--accent); }
+
+  .photo-slot .corner-tl, .photo-slot .corner-br {
+    position: absolute;
+    width: 12px; height: 12px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .photo-slot .corner-tl { top: 8px; left: 8px; border-top: 1px solid var(--accent); border-left: 1px solid var(--accent); }
+  .photo-slot .corner-br { bottom: 8px; right: 8px; border-bottom: 1px solid var(--accent); border-right: 1px solid var(--accent); }
+  .photo-slot:hover .corner-tl, .photo-slot:hover .corner-br { opacity: 1; }
+
+  .info-strip {
+    background: var(--panel);
+    padding: 30px 50px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .info-item {
+    padding: 0 30px;
+    border-right: 1px solid var(--border);
+  }
+
+  .info-item:first-child { padding-left: 0; }
+  .info-item:last-child { border-right: none; }
+
+  .info-key {
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+
+  .info-val {
+    font-family: var(--serif);
+    font-size: 15px;
+    color: var(--white);
+  }
+
+  /* ========================
+     ALLIES PAGE
+  ======================== */
+  .allies-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+  }
+
+  .ally-card {
+    background: var(--panel);
+    padding: 36px 32px;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s;
+    cursor: default;
+  }
+
+  .ally-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 0;
+    background: var(--green);
+    transition: height 0.4s;
+  }
+
+  .ally-card:hover::before { height: 100%; }
+  .ally-card:hover { background: #0d1015; }
+
+  .ally-card.org::before { background: var(--accent2); }
+
+  .ally-status {
+    font-size: 9px;
+    letter-spacing: 4px;
+    color: var(--green);
+    margin-bottom: 14px;
+    text-transform: uppercase;
+  }
+
+  .ally-card.org .ally-status { color: var(--accent2); }
+
+  .ally-name {
+    font-family: var(--display);
+    font-size: 26px;
+    color: var(--white);
+    letter-spacing: 3px;
+    margin-bottom: 6px;
+    line-height: 1.1;
+  }
+
+  .ally-title {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .ally-desc {
+    font-family: var(--serif);
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  .ally-clearance {
+    margin-top: 20px;
+    display: flex;
+    gap: 6px;
+  }
+
+  .clearance-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+
+  .clearance-dot.filled { background: var(--green); box-shadow: 0 0 4px var(--green); }
+  .ally-card.org .clearance-dot.filled { background: var(--accent2); box-shadow: 0 0 4px var(--accent2); }
+
+  /* ========================
+     ENEMIES PAGE
+  ======================== */
+  .enemies-warning {
+    border: 1px solid rgba(200,75,75,0.3);
+    background: rgba(200,75,75,0.05);
+    padding: 16px 24px;
+    margin-bottom: 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--red);
+  }
+
+  .enemies-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+  }
+
+  .enemy-card {
+    background: var(--panel);
+    padding: 36px 32px;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s;
+  }
+
+  .enemy-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 0;
+    background: var(--red);
+    transition: height 0.4s;
+  }
+
+  .enemy-card:hover::before { height: 100%; }
+  .enemy-card:hover { background: #10080a; }
+
+  .enemy-status {
+    font-size: 9px;
+    letter-spacing: 4px;
+    color: var(--red);
+    margin-bottom: 14px;
+    text-transform: uppercase;
+  }
+
+  .enemy-name {
+    font-family: var(--display);
+    font-size: 26px;
+    color: var(--white);
+    letter-spacing: 3px;
+    margin-bottom: 6px;
+  }
+
+  .enemy-title {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: rgba(200,75,75,0.7);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .enemy-desc {
+    font-family: var(--serif);
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  .threat-level {
+    margin-top: 20px;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  .threat-bar {
+    margin-top: 6px;
+    height: 3px;
+    background: var(--border);
+    position: relative;
+  }
+
+  .threat-fill {
+    height: 100%;
+    background: var(--red);
+    box-shadow: 0 0 6px var(--red);
+  }
+
+  /* ========================
+     MAP PAGE
+  ======================== */
+  .map-container {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 1px;
+    background: var(--border);
+    min-height: 600px;
+  }
+
+  .map-display {
+    background: var(--panel);
+    position: relative;
+    overflow: hidden;
+    min-height: 600px;
+  }
+
+  .map-svg-wrap {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #worldMap {
+    width: 100%;
+    height: 100%;
+  }
+
+  .map-sidebar {
+    background: var(--panel);
+    overflow-y: auto;
+  }
+
+  .map-sidebar-header {
+    padding: 24px 24px 0;
+    font-size: 9px;
+    letter-spacing: 4px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 16px;
+    margin-bottom: 0;
+  }
+
+  .location-item {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.2s;
+    position: relative;
+  }
+
+  .location-item:hover { background: #111420; }
+
+  .location-item.active { background: rgba(200,168,75,0.05); }
+
+  .location-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  .loc-name {
+    font-family: var(--display);
+    font-size: 18px;
+    color: var(--white);
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+
+  .loc-coords {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+
+  .loc-desc {
+    font-family: var(--serif);
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  /* MAP DOT */
+  .map-dot {
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .map-dot circle {
+    fill: var(--accent);
+    filter: drop-shadow(0 0 6px rgba(200,168,75,0.8));
+  }
+
+  .map-dot:hover circle { r: 7px; }
+
+  .map-pulse {
+    animation: mapPulse 2s infinite;
+  }
+
+  @keyframes mapPulse {
+    0% { opacity: 1; r: 6; }
+    50% { opacity: 0.3; r: 12; }
+    100% { opacity: 0; r: 18; }
+  }
+
+  /* ========================
+     CONTACT PAGE
+  ======================== */
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    margin-bottom: 1px;
+  }
+
+  .contact-panel {
+    background: var(--panel);
+    padding: 50px 50px;
+  }
+
+  .contact-panel h3 {
+    font-family: var(--display);
+    font-size: 32px;
+    letter-spacing: 5px;
+    color: var(--white);
+    margin-bottom: 30px;
+    position: relative;
+    padding-bottom: 16px;
+  }
+
+  .contact-panel h3::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 40px; height: 1px;
+    background: var(--accent);
+  }
+
+  .contact-item {
+    display: flex;
+    gap: 20px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: flex-start;
+  }
+
+  .contact-icon {
+    width: 36px; height: 36px;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .contact-key {
+    font-size: 9px;
+    letter-spacing: 4px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .contact-val {
+    font-family: var(--serif);
+    font-size: 16px;
+    color: var(--white);
+  }
+
+  /* FORM */
+  .contact-form { display: flex; flex-direction: column; gap: 16px; }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+  .form-group label {
+    font-size: 9px;
+    letter-spacing: 4px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    background: var(--dark);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    resize: vertical;
+    -webkit-appearance: none;
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus,
+  .form-group select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(200,168,75,0.1);
+  }
+
+  .form-group textarea { min-height: 120px; }
+
+  .form-group select option { background: var(--dark); }
+
+  .submit-btn {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    padding: 14px 28px;
+    cursor: crosshair;
+    align-self: flex-start;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .submit-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s;
+  }
+
+  .submit-btn:hover::before { transform: scaleX(1); }
+  .submit-btn:hover { color: var(--black); }
+  .submit-btn span { position: relative; z-index: 1; }
+
+  /* TICKER */
+  .ticker {
+    background: rgba(200,168,75,0.05);
+    border-top: 1px solid rgba(200,168,75,0.15);
+    border-bottom: 1px solid rgba(200,168,75,0.15);
+    padding: 10px 0;
+    overflow: hidden;
+    margin: 30px 0;
+    white-space: nowrap;
+  }
+
+  .ticker-inner {
+    display: inline-block;
+    animation: ticker 30s linear infinite;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--accent);
+    padding: 0 50px;
+  }
+
+  @keyframes ticker {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* TRANSMISSION BLOCK */
+  .transmission {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 30px 40px;
+    margin-bottom: 30px;
+    position: relative;
+  }
+
+  .transmission::before {
+    content: 'TRANSMISSION';
+    position: absolute;
+    top: -9px; left: 20px;
+    background: var(--panel);
+    padding: 0 10px;
+    font-size: 9px;
+    letter-spacing: 5px;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+
+  .transmission p {
+    font-family: var(--serif);
+    font-size: 15px;
+    line-height: 1.9;
+    color: var(--text);
+    font-style: italic;
+  }
+
+  /* UTIL */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 40px 0;
+    position: relative;
+  }
+
+  .divider::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 0; top: -8px;
+    font-size: 9px;
+    letter-spacing: 4px;
+    color: var(--text-dim);
+    background: var(--black);
+    padding-right: 16px;
+    text-transform: uppercase;
+  }
+
+  .tag {
+    display: inline-block;
+    border: 1px solid var(--border);
+    padding: 3px 10px;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin: 3px;
+  }
+
+  /* MOBILE */
+  @media (max-width: 900px) {
+    nav { padding: 0 20px; }
+    .nav-logo span { display: none; }
+    .page { padding: 80px 20px 50px; }
+    .home-grid { grid-template-columns: 1fr; }
+    .home-hero { grid-column: 1; }
+    .photo-section { grid-template-columns: repeat(2, 1fr); }
+    .info-strip { grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; }
+    .allies-grid, .enemies-grid { grid-template-columns: 1fr; }
+    .map-container { grid-template-columns: 1fr; }
+    .contact-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">
+    MILLER
+    <span>// DOSSIER ALPHA-7 //</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#" onclick="showPage('home')" id="nav-home" class="active">INDEX</a></li>
+    <li><a href="#" onclick="showPage('allies')" id="nav-allies">ALLIES</a></li>
+    <li><a href="#" onclick="showPage('enemies')" id="nav-enemies">THREATS</a></li>
+    <li><a href="#" onclick="showPage('map')" id="nav-map">LOCATIONS</a></li>
+    <li><a href="#" onclick="showPage('contact')" id="nav-contact">CONTACT</a></li>
+  </ul>
+</nav>
+
+<!-- ======================== HOME ======================== -->
+<div id="page-home" class="page active">
+
+  <div class="home-grid">
+    <div class="home-hero">
+      <div class="dossier-stamp">DOSSIER</div>
+      <div class="classification-tag">// CLEARANCE LEVEL: AP //</div>
+      <div class="hero-name">MARK<br>MILLER</div>
+      <div class="hero-title">Advanced Placement Government & Politics</div>
+      <p class="hero-bio">
+        He has spent decades mapping the architecture of power — who holds it, who abuses it, and why the Framers of the Constitution were more paranoid than history remembers. He does not merely teach the American system. He <em>dissects</em> it. His students don't memorize facts; they emerge from his classroom understanding exactly how the machinery of governance works — and exactly how it can break.
+        <br><br>
+        He has walked the floors of the Capitol, argued the <span class="redacted">————————————</span> before colleagues at three institutions, and is known, in certain circles, for changing the way a generation thinks about federalism.
+      </p>
+    </div>
+
+    <div class="stats-panel">
+      <div class="stat-item">
+        <div class="stat-label">YEARS ACTIVE</div>
+        <div class="stat-value">20+</div>
+        <div class="stat-sub">Shaping political minds</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">AP EXAM PASS RATE</div>
+        <div class="stat-value">94%</div>
+        <div class="stat-sub">District average: 71%</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">AMENDMENTS MEMORIZED</div>
+        <div class="stat-value">27</div>
+        <div class="stat-sub">Cold. No notes.</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">STATUS</div>
+        <div class="stat-value" style="color:var(--green);font-size:20px;">ACTIVE</div>
+        <div class="stat-sub"><span class="status-dot"></span> Operational</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="photo-section">
+    <div class="photo-slot">
+      <div class="corner-tl"></div>
+      <div class="corner-br"></div>
+      <div class="photo-placeholder">⊕</div>
+      <div class="photo-label">FIELD PHOTO 001<br>WASHINGTON D.C.</div>
+    </div>
+    <div class="photo-slot">
+      <div class="corner-tl"></div>
+      <div class="corner-br"></div>
+      <div class="photo-placeholder">⊕</div>
+      <div class="photo-label">FIELD PHOTO 002<br>CLASSROOM OPS</div>
+    </div>
+    <div class="photo-slot">
+      <div class="corner-tl"></div>
+      <div class="corner-br"></div>
+      <div class="photo-placeholder">⊕</div>
+      <div class="photo-label">FIELD PHOTO 003<br>DEBATE SUMMIT</div>
+    </div>
+    <div class="photo-slot">
+      <div class="corner-tl"></div>
+      <div class="corner-br"></div>
+      <div class="photo-placeholder">⊕</div>
+      <div class="photo-label">FIELD PHOTO 004<br>UNDISCLOSED</div>
+    </div>
+  </div>
+
+  <div class="info-strip">
+    <div class="info-item">
+      <div class="info-key">Specialization</div>
+      <div class="info-val">Constitutional Law & Civil Liberties</div>
+    </div>
+    <div class="info-item">
+      <div class="info-key">Clearance</div>
+      <div class="info-val">AP Level // Top Tier</div>
+    </div>
+    <div class="info-item">
+      <div class="info-key">Known Associates</div>
+      <div class="info-val">See ALLIES Dossier</div>
+    </div>
+    <div class="info-item">
+      <div class="info-key">Known Adversaries</div>
+      <div class="info-val">See THREATS File</div>
+    </div>
+    <div class="info-item">
+      <div class="info-key">Last Seen</div>
+      <div class="info-val">Classroom 214<br>Somewhere in America</div>
+    </div>
+  </div>
+
+  <div class="ticker">
+    <span class="ticker-inner">
+      ◈ MARK MILLER — EDUCATOR — POLITICAL ANALYST — CONSTITUTIONAL SCHOLAR — AP GOVERNMENT — DEMOCRACY'S LAST LINE OF DEFENSE — CHALK IN HAND — DANGER IN EYES — MAKING AMERICA CIVICALLY LITERATE ◈ MARK MILLER — EDUCATOR — POLITICAL ANALYST — CONSTITUTIONAL SCHOLAR — AP GOVERNMENT — DEMOCRACY'S LAST LINE OF DEFENSE — CHALK IN HAND — DANGER IN EYES — MAKING AMERICA CIVICALLY LITERATE ◈
+    </span>
+  </div>
+
+  <div class="transmission">
+    <p>"His classroom is a war room. The document on the board is always the Constitution. The enemy is always apathy. And in twenty years, not a single student has walked out without understanding exactly what they're fighting for." — Former student, identity withheld, 2022</p>
+  </div>
+
+</div>
+
+<!-- ======================== ALLIES ======================== -->
+<div id="page-allies" class="page">
+
+  <div class="section-header">
+    <div class="section-label">// CLASSIFIED NETWORK //</div>
+    <div class="section-title">ALLIES</div>
+    <div class="section-sub">Trusted agents, institutions, and intellectual partners in the field</div>
+  </div>
+
+  <div class="allies-grid">
+
+    <div class="ally-card">
+      <div class="ally-status">◈ CONFIRMED ALLY // INDIVIDUAL</div>
+      <div class="ally-name">SANDRA DAY O'CONNOR</div>
+      <div class="ally-title">Retired Associate Justice — U.S. Supreme Court</div>
+      <div class="ally-desc">The first woman to serve on the Supreme Court and a lifelong crusader for civic education. O'Connor founded <em>iCivics</em> specifically because she feared Americans were forgetting how their own government worked. Miller agreed. Her jurisprudence on federalism remains required reading in his classroom.</div>
+      <div class="ally-clearance">
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot"></div>
+      </div>
+    </div>
+
+    <div class="ally-card org">
+      <div class="ally-status">◈ CONFIRMED ALLY // ORGANIZATION</div>
+      <div class="ally-name">C-SPAN</div>
+      <div class="ally-title">Cable-Satellite Public Affairs Network</div>
+      <div class="ally-desc">The unblinking eye of democracy. C-SPAN airs the raw, unedited machinery of government — no commentary, no spin, no agenda. Miller uses their archives extensively. If you want to know what Congress actually looks like, C-SPAN will show you. It's rarely flattering. That's the point.</div>
+      <div class="ally-clearance">
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot"></div>
+        <div class="clearance-dot"></div>
+      </div>
+    </div>
+
+    <div class="ally-card org">
+      <div class="ally-status">◈ CONFIRMED ALLY // ORGANIZATION</div>
+      <div class="ally-name">NATIONAL ARCHIVES</div>
+      <div class="ally-title">Washington, D.C. — Repository of American History</div>
+      <div class="ally-desc">He has stood in front of the original Constitution. The original. Under glass, in a vault, with nitrogen gas protecting 235-year-old parchment that still governs 330 million people. The National Archives is not a museum. It is the headquarters of everything Miller teaches.</div>
+      <div class="ally-clearance">
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot filled"></div>
+      </div>
+    </div>
+
+    <div class="ally-card">
+      <div class="ally-status">◈ CONFIRMED ALLY // INDIVIDUAL</div>
+      <div class="ally-name">JAMES MADISON</div>
+      <div class="ally-title">4th President — Father of the Constitution</div>
+      <div class="ally-desc">Miller considers Madison the most dangerous thinker the American republic has ever produced — dangerous to tyrants, specifically. The Federalist No. 51 is Miller's personal manifesto. "Ambition must be made to counteract ambition." He has quoted this more times than he has taken attendance.</div>
+      <div class="ally-clearance">
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot filled"></div>
+      </div>
+    </div>
+
+    <div class="ally-card org">
+      <div class="ally-status">◈ CONFIRMED ALLY // ORGANIZATION</div>
+      <div class="ally-name">BROOKINGS INSTITUTION</div>
+      <div class="ally-title">Independent Research Organization — D.C.</div>
+      <div class="ally-desc">One of the most respected nonpartisan think tanks in the world. When Miller wants to assign primary policy analysis to students, Brookings provides the ammunition. Their research on election administration, institutional reform, and democratic backsliding is on his syllabus every semester.</div>
+      <div class="ally-clearance">
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot"></div>
+        <div class="clearance-dot"></div>
+      </div>
+    </div>
+
+    <div class="ally-card">
+      <div class="ally-status">◈ CONFIRMED ALLY // INDIVIDUAL</div>
+      <div class="ally-name">THURGOOD MARSHALL</div>
+      <div class="ally-title">Associate Justice — U.S. Supreme Court</div>
+      <div class="ally-desc">Marshall argued before the Court that segregated schools were unconstitutional — and won. <em>Brown v. Board of Education</em> is arguably the most important Supreme Court decision of the 20th century. Miller teaches Marshall not just as a legal figure, but as proof that one person with a constitutional argument can change the country.</div>
+      <div class="ally-clearance">
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot filled"></div>
+      </div>
+    </div>
+
+    <div class="ally-card org">
+      <div class="ally-status">◈ CONFIRMED ALLY // ORGANIZATION</div>
+      <div class="ally-name">ACLU</div>
+      <div class="ally-title">American Civil Liberties Union</div>
+      <div class="ally-desc">Whether you agree with every case they take or not, the ACLU has been arguing for civil liberties in American courts for over a century. Miller assigns their case briefs. Not because he agrees with everything they do — but because they show students how the Bill of Rights works in practice, not just in theory.</div>
+      <div class="ally-clearance">
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot"></div>
+        <div class="clearance-dot"></div>
+      </div>
+    </div>
+
+    <div class="ally-card">
+      <div class="ally-status">◈ CONFIRMED ALLY // INDIVIDUAL</div>
+      <div class="ally-name">ALEXANDER HAMILTON</div>
+      <div class="ally-title">1st Secretary of the Treasury — Federalist Papers Co-Author</div>
+      <div class="ally-desc">The man was the original workaholic. Fifty-one Federalist Papers. A national banking system. An entire financial architecture for a country that didn't know what it was yet. Miller respects the output. He assigns Federalist No. 70 every year without fail. Hamilton was right about executive energy.</div>
+      <div class="ally-clearance">
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot"></div>
+      </div>
+    </div>
+
+    <div class="ally-card org">
+      <div class="ally-status">◈ CONFIRMED ALLY // ORGANIZATION</div>
+      <div class="ally-name">iCIVICS</div>
+      <div class="ally-title">National Civic Education Nonprofit</div>
+      <div class="ally-desc">Founded by Justice O'Connor, iCivics has reached over 8 million students with free, game-based civic education tools. Miller uses their simulations in class. He believes the best way to understand how a bill becomes a law is to try — and fail — to pass one yourself. Students agree. They fail constantly. They learn more.</div>
+      <div class="ally-clearance">
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot filled"></div>
+        <div class="clearance-dot"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ======================== ENEMIES ======================== -->
+<div id="page-enemies" class="page">
+
+  <div class="section-header">
+    <div class="section-label">// THREAT ASSESSMENT FILE //</div>
+    <div class="section-title">THREATS</div>
+    <div class="section-sub">Known intellectual adversaries, historical obstacles, and the forces Miller has sworn to defeat</div>
+  </div>
+
+  <div class="enemies-warning">
+    <span style="font-size:18px;">⚠</span>
+    <span>CLASSIFIED // FOR INSTRUCTIONAL EYES ONLY // THE FOLLOWING FILE DOCUMENTS ADVERSARIES IN THE REALM OF CIVIC IGNORANCE AND CONSTITUTIONAL ABUSE</span>
+  </div>
+
+  <div class="enemies-grid">
+
+    <div class="enemy-card">
+      <div class="enemy-status">⚠ CONFIRMED THREAT // HISTORICAL FIGURE</div>
+      <div class="enemy-name">KING GEORGE III</div>
+      <div class="enemy-title">Former Monarch — British Empire</div>
+      <div class="enemy-desc">The original reason the Bill of Rights exists. Every single amendment in the Bill of Rights was written as a direct response to something George III did to the colonists. Miller uses this framework every year. No Rights exist in a vacuum. Every one was earned by fighting a specific tyranny. George made that tyranny very obvious.</div>
+      <div class="threat-level">THREAT LEVEL</div>
+      <div class="threat-bar"><div class="threat-fill" style="width:40%"></div></div>
+    </div>
+
+    <div class="enemy-card">
+      <div class="enemy-status">⚠ CONFIRMED THREAT // HISTORICAL FIGURE</div>
+      <div class="enemy-name">JOSEPH McCARTHY</div>
+      <div class="enemy-title">U.S. Senator — Wisconsin (1947–1957)</div>
+      <div class="enemy-desc">A case study in how fear can hijack due process. Senator McCarthy weaponized the idea of disloyalty to destroy careers, silence dissent, and intimidate Congress and the press. Miller teaches McCarthyism as one of the most dangerous moments in American civil liberties history — a warning that shows up in every unit on the First and Fifth Amendments.</div>
+      <div class="threat-level">THREAT LEVEL</div>
+      <div class="threat-bar"><div class="threat-fill" style="width:85%"></div></div>
+    </div>
+
+    <div class="enemy-card">
+      <div class="enemy-status">⚠ CONFIRMED THREAT // CONCEPT</div>
+      <div class="enemy-name">CIVIC APATHY</div>
+      <div class="enemy-title">The Enemy Without a Face — Nationwide</div>
+      <div class="enemy-desc">Miller's most persistent and dangerous adversary. It has no headquarters. It doesn't campaign. It just convinces people that voting doesn't matter, that policy is too complicated, that government is someone else's problem. Every year Miller fights it in classroom 214 with primary sources, Socratic questioning, and a dry wit that refuses to let indifference survive the period.</div>
+      <div class="threat-level">THREAT LEVEL</div>
+      <div class="threat-bar"><div class="threat-fill" style="width:95%"></div></div>
+    </div>
+
+    <div class="enemy-card">
+      <div class="enemy-status">⚠ CONFIRMED THREAT // HISTORICAL FIGURE</div>
+      <div class="enemy-name">AARON BURR</div>
+      <div class="enemy-title">Former Vice President — United States</div>
+      <div class="enemy-desc">Shot Alexander Hamilton. Attempted to separate the western territories from the Union in what became known as the Burr Conspiracy. Was tried for treason and acquitted only on a technicality. Miller teaches Burr as proof that ambition without principle doesn't just corrupt individuals — it can fracture republics. Burr remains a cautionary tale with excellent aim.</div>
+      <div class="threat-level">THREAT LEVEL</div>
+      <div class="threat-bar"><div class="threat-fill" style="width:70%"></div></div>
+    </div>
+
+    <div class="enemy-card">
+      <div class="enemy-status">⚠ CONFIRMED THREAT // INSTITUTIONAL</div>
+      <div class="enemy-name">GERRYMANDERING</div>
+      <div class="enemy-title">Systemic Electoral Manipulation — All 50 States</div>
+      <div class="enemy-desc">Named after Elbridge Gerry, whose 1812 redistricting produced a district shaped like a salamander. Miller devotes an entire week to redistricting — how it works, why both parties do it, and why it is one of the most effective ways to subvert representative democracy while following the letter of the law. Students leave that week furious. That's the goal.</div>
+      <div class="threat-level">THREAT LEVEL</div>
+      <div class="threat-bar"><div class="threat-fill" style="width:80%"></div></div>
+    </div>
+
+    <div class="enemy-card">
+      <div class="enemy-status">⚠ CONFIRMED THREAT // HISTORICAL FIGURE</div>
+      <div class="enemy-name">RICHARD NIXON</div>
+      <div class="enemy-title">37th President — United States</div>
+      <div class="enemy-desc">Watergate. The Saturday Night Massacre. Eighteen and a half minutes of missing tape. Nixon's presidency is Miller's definitive case study in executive overreach, obstruction of justice, and the question of whether a sitting president is above the law. He teaches it with relish. <em>United States v. Nixon</em> is, in his view, the Supreme Court's finest hour.</div>
+      <div class="threat-level">THREAT LEVEL</div>
+      <div class="threat-bar"><div class="threat-fill" style="width:88%"></div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ======================== MAP ======================== -->
+<div id="page-map" class="page">
+
+  <div class="section-header">
+    <div class="section-label">// FIELD OPERATIONS //</div>
+    <div class="section-title">LOCATIONS</div>
+    <div class="section-sub">Known operational sites, field visits, and sites of significant constitutional history</div>
+  </div>
+
+  <div class="map-container">
+    <div class="map-display">
+      <canvas id="mapCanvas"></canvas>
+    </div>
+    <div class="map-sidebar">
+      <div class="map-sidebar-header">// 7 CONFIRMED LOCATIONS</div>
+      <div class="location-item active" onclick="highlightLoc(0)">
+        <div class="loc-name">WASHINGTON, D.C.</div>
+        <div class="loc-coords">38.9072° N, 77.0369° W</div>
+        <div class="loc-desc">The Capitol, the Supreme Court, the National Archives. Miller has walked every corridor. He brings students here when he can. When he can't, he brings it to them.</div>
+      </div>
+      <div class="location-item" onclick="highlightLoc(1)">
+        <div class="loc-name">PHILADELPHIA, PA</div>
+        <div class="loc-coords">39.9526° N, 75.1652° W</div>
+        <div class="loc-desc">Independence Hall. The Constitutional Convention of 1787. The room where the Republic was built behind closed doors, in the summer heat, by men who disagreed about almost everything and compromised on the rest.</div>
+      </div>
+      <div class="location-item" onclick="highlightLoc(2)">
+        <div class="loc-name">GETTYSBURG, PA</div>
+        <div class="loc-coords">39.8309° N, 77.2311° W</div>
+        <div class="loc-desc">Lincoln's address here redefined the American project. "A new birth of freedom." Miller quotes it from memory. He believes the Gettysburg Address is the greatest political speech in American history and will argue that point with anyone, anywhere, at any time.</div>
+      </div>
+      <div class="location-item" onclick="highlightLoc(3)">
+        <div class="loc-name">MONTGOMERY, AL</div>
+        <div class="loc-coords">32.3668° N, 86.2999° W</div>
+        <div class="loc-desc">Rosa Parks. The Montgomery Bus Boycott. The Civil Rights Movement's ground zero. Miller teaches the movement not as history but as instruction manual — how ordinary citizens changed the law through organized, nonviolent resistance.</div>
+      </div>
+      <div class="location-item" onclick="highlightLoc(4)">
+        <div class="loc-name">NEW YORK CITY, NY</div>
+        <div class="loc-coords">40.7128° N, 74.0060° W</div>
+        <div class="loc-desc">The first capital of the United States. Home of the Federalist Papers' publication. Where Hamilton built the nation's financial system and where the machinery of American power was first assembled. Also where he was famously replaced by a musical.</div>
+      </div>
+      <div class="location-item" onclick="highlightLoc(5)">
+        <div class="loc-name">LITTLE ROCK, AR</div>
+        <div class="loc-coords">34.7465° N, 92.2896° W</div>
+        <div class="loc-desc">Central High School, 1957. President Eisenhower deployed the 101st Airborne to enforce desegregation. The moment federal power was used to protect civil rights on American soil. Miller says if you don't understand Little Rock, you don't understand the 14th Amendment.</div>
+      </div>
+      <div class="location-item" onclick="highlightLoc(6)">
+        <div class="loc-name">CLASSROOM 214</div>
+        <div class="loc-coords">COORDINATES CLASSIFIED</div>
+        <div class="loc-desc">The center of operations. Where the Constitution is taught, questioned, defended, and dissected. Where students arrive expecting a textbook course and leave with a working understanding of how the most powerful government in human history actually functions. Threat level to civic ignorance: extreme.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== CONTACT ======================== -->
+<div id="page-contact" class="page">
+
+  <div class="section-header">
+    <div class="section-label">// SECURE CHANNEL //</div>
+    <div class="section-title">CONTACT</div>
+    <div class="section-sub">Establish communication through approved channels only</div>
+  </div>
+
+  <div class="contact-grid">
+    <div class="contact-panel">
+      <h3>DIRECT LINE</h3>
+
+      <div class="contact-item">
+        <div class="contact-icon">✉</div>
+        <div>
+          <div class="contact-key">Encrypted Email</div>
+          <div class="contact-val">m.miller@classroom214.edu</div>
+        </div>
+      </div>
+
+      <div class="contact-item">
+        <div class="contact-icon">◫</div>
+        <div>
+          <div class="contact-key">Office Hours</div>
+          <div class="contact-val">Mon – Fri // 0730–0800 hrs<br>Room 214 — Third Floor</div>
+        </div>
+      </div>
+
+      <div class="contact-item">
+        <div class="contact-icon">⊞</div>
+        <div>
+          <div class="contact-key">Department</div>
+          <div class="contact-val">Social Studies // AP Government & Politics</div>
+        </div>
+      </div>
+
+      <div class="contact-item">
+        <div class="contact-icon">◈</div>
+        <div>
+          <div class="contact-key">Response Protocol</div>
+          <div class="contact-val">24–48 hours on school days.<br>Weekends: do not expect miracles.</div>
+        </div>
+      </div>
+
+      <div style="margin-top:30px;">
+        <div style="font-size:9px;letter-spacing:4px;color:var(--text-dim);margin-bottom:12px;text-transform:uppercase;">// Tags // Known Subject Areas</div>
+        <span class="tag">Constitutional Law</span>
+        <span class="tag">AP Gov & Politics</span>
+        <span class="tag">Federalism</span>
+        <span class="tag">Civil Liberties</span>
+        <span class="tag">Electoral Systems</span>
+        <span class="tag">SCOTUS Cases</span>
+        <span class="tag">The Federalist Papers</span>
+        <span class="tag">Civic Education</span>
+        <span class="tag">Separation of Powers</span>
+      </div>
+    </div>
+
+    <div class="contact-panel">
+      <h3>TRANSMIT MESSAGE</h3>
+      <div class="contact-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Callsign (Name)</label>
+            <input type="text" placeholder="AGENT NAME">
+          </div>
+          <div class="form-group">
+            <label>Clearance (Role)</label>
+            <select>
+              <option value="">SELECT—</option>
+              <option>Current Student</option>
+              <option>Former Student</option>
+              <option>Parent / Guardian</option>
+              <option>Colleague</option>
+              <option>Interested Civilian</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Secure Channel (Email)</label>
+          <input type="email" placeholder="your@email.gov">
+        </div>
+        <div class="form-group">
+          <label>Subject of Transmission</label>
+          <select>
+            <option value="">SELECT—</option>
+            <option>Assignment / Grade Inquiry</option>
+            <option>AP Exam Preparation</option>
+            <option>Constitutional Question</option>
+            <option>Extra Credit Opportunities</option>
+            <option>Letter of Recommendation</option>
+            <option>General Intelligence</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Message Content</label>
+          <textarea placeholder="State your business clearly. Be concise. Mr. Miller respects brevity."></textarea>
+        </div>
+        <button class="submit-btn" onclick="handleSubmit()"><span>// TRANSMIT //</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="status-bar">
+  <div><span class="status-dot"></span> SYSTEM ONLINE // DOSSIER ALPHA-7 ACTIVE</div>
+  <div id="clock">--:--:-- UTC</div>
+  <div>CLEARANCE: AP // AUTHORIZED ACCESS ONLY</div>
+</div>
+
+<script>
+  // PAGE ROUTING
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    document.getElementById('nav-' + id).classList.add('active');
+    if (id === 'map') setTimeout(initMap, 100);
+  }
+
+  // CLOCK
+  function updateClock() {
+    const now = new Date();
+    const h = String(now.getUTCHours()).padStart(2,'0');
+    const m = String(now.getUTCMinutes()).padStart(2,'0');
+    const s = String(now.getUTCSeconds()).padStart(2,'0');
+    document.getElementById('clock').textContent = h+':'+m+':'+s+' UTC';
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // MAP
+  const locations = [
+    { name: 'WASHINGTON D.C.', x: 0.245, y: 0.38 },
+    { name: 'PHILADELPHIA',    x: 0.248, y: 0.36 },
+    { name: 'GETTYSBURG',      x: 0.243, y: 0.355 },
+    { name: 'MONTGOMERY',      x: 0.225, y: 0.445 },
+    { name: 'NEW YORK CITY',   x: 0.255, y: 0.35 },
+    { name: 'LITTLE ROCK',     x: 0.200, y: 0.435 },
+    { name: 'CLASSROOM 214',   x: 0.155, y: 0.37 },
+  ];
+
+  let activeLocIdx = 0;
+  let mapInit = false;
+
+  function highlightLoc(idx) {
+    activeLocIdx = idx;
+    document.querySelectorAll('.location-item').forEach((el, i) => {
+      el.classList.toggle('active', i === idx);
+    });
+    drawMap();
+  }
+
+  function initMap() {
+    if (mapInit) return;
+    mapInit = true;
+    const canvas = document.getElementById('mapCanvas');
+    const container = canvas.parentElement;
+    canvas.width = container.offsetWidth;
+    canvas.height = container.offsetHeight;
+    drawMap();
+    window.addEventListener('resize', () => {
+      canvas.width = container.offsetWidth;
+      canvas.height = container.offsetHeight;
+      drawMap();
+    });
+  }
+
+  function drawMap() {
+    const canvas = document.getElementById('mapCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0a0c10';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid lines
+    ctx.strokeStyle = 'rgba(30,37,48,0.8)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < W; x += 40) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    }
+    for (let y = 0; y < H; y += 40) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+
+    // USA outline (simplified polygon)
+    const usaPath = [
+      [0.11,0.28],[0.13,0.26],[0.16,0.25],[0.19,0.26],[0.22,0.25],
+      [0.26,0.24],[0.30,0.25],[0.33,0.26],[0.34,0.28],[0.33,0.30],
+      [0.35,0.31],[0.35,0.34],[0.32,0.38],[0.30,0.42],[0.28,0.46],
+      [0.25,0.50],[0.22,0.52],[0.19,0.51],[0.17,0.49],[0.14,0.47],
+      [0.12,0.44],[0.11,0.40],[0.10,0.36],[0.10,0.32],[0.11,0.28]
+    ];
+    ctx.beginPath();
+    usaPath.forEach(([x,y], i) => {
+      i === 0 ? ctx.moveTo(x*W, y*H) : ctx.lineTo(x*W, y*H);
+    });
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(200,168,75,0.04)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(200,168,75,0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Connection lines between locations
+    ctx.setLineDash([4, 8]);
+    ctx.strokeStyle = 'rgba(200,168,75,0.15)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < locations.length - 1; i++) {
+      const a = locations[i], b = locations[i+1];
+      ctx.beginPath();
+      ctx.moveTo(a.x * W, a.y * H);
+      ctx.lineTo(b.x * W, b.y * H);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+
+    // Draw dots
+    locations.forEach((loc, i) => {
+      const px = loc.x * W, py = loc.y * H;
+      const isActive = i === activeLocIdx;
+      const r = isActive ? 7 : 5;
+
+      // Pulse ring for active
+      if (isActive) {
+        ctx.beginPath();
+        ctx.arc(px, py, 18, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(200,168,75,0.15)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(px, py, 12, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(200,168,75,0.25)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      // Dot
+      ctx.beginPath();
+      ctx.arc(px, py, r, 0, Math.PI * 2);
+      ctx.fillStyle = isActive ? '#c8a84b' : 'rgba(200,168,75,0.5)';
+      ctx.fill();
+      if (isActive) {
+        ctx.shadowColor = '#c8a84b';
+        ctx.shadowBlur = 15;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+
+      // Label
+      ctx.font = `bold 9px 'Share Tech Mono', monospace`;
+      ctx.letterSpacing = '2px';
+      ctx.fillStyle = isActive ? '#c8a84b' : 'rgba(184,190,200,0.6)';
+      ctx.fillText(loc.name, px + 12, py + 4);
+    });
+
+    // Crosshair on active
+    const al = locations[activeLocIdx];
+    const ax = al.x * W, ay = al.y * H;
+    ctx.strokeStyle = 'rgba(200,168,75,0.4)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3,4]);
+    ctx.beginPath(); ctx.moveTo(ax, 0); ctx.lineTo(ax, H); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, ay); ctx.lineTo(W, ay); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // FORM
+  function handleSubmit() {
+    alert('TRANSMISSION RECEIVED.\nMiller will respond within 24–48 hours.\nStand by.');
+  }
+
+  // Prevent default link behavior
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.addEventListener('click', e => e.preventDefault());
+  });
+</script>
+</body>
+</html>
